@@ -64,7 +64,7 @@ http://localhost:5050
 
 ### Login Credentials
 
-- Email: `admin@admin.com`
+- Email: `admin@example.com`
 - Password: `admin`
 
 ---
@@ -106,5 +106,5 @@ docker compose down
 | Component     | URL                    | Username           | Password     |
 |---------------|-------------------------|---------------------|--------------|
 | JupyterLab    | http://localhost:8888   | (use token from logs) | —          |
-| pgAdmin       | http://localhost:5050   | admin@admin.com     | admin        |
+| pgAdmin       | http://localhost:5050   | admin@example.com     | admin        |
 | PostgreSQL    | —                       | postgres            | postgres     |
