@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Data (keep raw datasets out of git)
+data/landing/
+data/bronze/
+data/silver/
+data/gold/
+*.csv
+*.csv.gz
+*.parquet
+
+# Secrets
+.env

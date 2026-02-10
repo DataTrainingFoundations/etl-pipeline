@@ -12,6 +12,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./sql/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./:/work:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -31,9 +32,11 @@ services:
     working_dir: /home/jovyan/work
     command: >
       start-notebook.sh
-      --NotebookApp.token=''
-      --NotebookApp.password=''
-      --NotebookApp.ip=0.0.0.0
+      --ServerApp.password=''
+      --IdentityProvider.token=''
+      --ServerApp.ip=0.0.0.0
+      --ServerApp.port=8888
+      --ServerApp.open_browser=False
     depends_on:
       postgres:
         condition: service_healthy
