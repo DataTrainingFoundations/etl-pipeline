@@ -1,171 +1,190 @@
-# Weather–Accident Data Pipeline
+# 🌦 Weather + Accidents ETL Pipeline
 
-A Dockerized data engineering pipeline that ingests NOAA weather station metadata and daily weather observations, preparing the data for downstream analysis of weather impacts on traffic accidents.
+A production-style data engineering pipeline integrating:
 
-This project is built incrementally using a **Bronze → Silver → Gold** data modeling approach and is intentionally scoped to demonstrate real-world ELT pipeline design, not just analysis scripts.
+-   🚗 US Accidents dataset (7.7M+ records)
+-   🌦 NOAA GHCN Daily weather data
+-   📍 Geospatial nearest-station mapping (PostGIS)
+-   🏗 Bronze → Silver → Gold layered architecture
+-   🐳 Fully containerized with Docker
+-   📊 Interactive UI built with Streamlit
 
----
+------------------------------------------------------------------------
 
-## Current Scope (Implemented)
+## 🧠 Project Overview
 
-### ✅ Station Metadata
-- Download NOAA GHCN station metadata (fixed-width format)
-- Convert raw metadata into structured CSV
-- Load raw station data into PostgreSQL (**Bronze layer**)
-- Clean and normalize station records into a queryable **Silver layer**
-- Archive ingested source files for traceability
+This project builds a scalable ETL pipeline that:
 
-### 🚧 Weather Data (Partial)
-- Download selected NOAA `.dly` daily weather files
-- Convert `.dly` records into CSV subsets (station-scoped)
-- Store raw daily weather data in landing area
-- **Database ingestion for daily weather is not yet implemented**
+1.  Ingests raw US accident data (Kaggle dataset)
+2.  Downloads and processes NOAA daily weather station files
+3.  Maps each accident to its nearest weather station
+4.  Joins accident + weather data into an analytics-ready gold layer
 
----
+The goal:\
+Enable weather impact analysis on traffic accidents using clean,
+structured, geospatially-aware data.
 
-## Data Sources
+------------------------------------------------------------------------
 
-- **NOAA Global Historical Climatology Network (GHCN)**
-  - Station metadata: `ghcnd-stations.txt`
-  - Daily weather observations: `.dly` files
-  - Source: https://www.ncei.noaa.gov/pub/data/ghcn/daily/
+## 🏗 Architecture
 
----
+### 🔹 Bronze Layer (Raw Data)
 
-## Architecture Overview
+  Table                  Description
+  ---------------------- -----------------------------------
+  bronze.stations        Raw NOAA station metadata
+  bronze.weather_daily   Raw parsed NOAA .dly weather data
+  bronze.us_accidents    Raw US accidents dataset
 
-```
-NOAA (raw)
-   ↓
-Landing (CSV / raw extracts)
-   ↓
-PostgreSQL Bronze (raw, append-only)
-   ↓
-PostgreSQL Silver (cleaned, typed)
-   ↓
-Future: Gold / Analytics
-```
+------------------------------------------------------------------------
 
----
+### 🔹 Silver Layer (Clean + Structured)
 
-## Tech Stack
+  Table                         Description
+  ----------------------------- -------------------------------------
+  silver.stations               Cleaned station metadata + geometry
+  silver.weather_daily          Cleaned weather records
+  silver.weather_daily_pivot    Materialized daily pivot
+  silver.us_accidents           Cleaned accident records + geometry
+  silver.accident_station_map   Nearest station mapping
 
-- Python 3.11
-- Pandas
-- PostgreSQL 16
-- SQLAlchemy
-- Docker & Docker Compose
-- Jupyter Notebook
+------------------------------------------------------------------------
 
----
+### 🔹 Gold Layer (Analytics Ready)
 
-## Repository Structure
+  Table                   Description
+  ----------------------- ----------------------------------------------
+  gold.accident_weather   Final fact table joining accidents + weather
 
-```
-.
-├── data/
-│   ├── landing/
-│   │   ├── stations/
-│   │   ├── weather/
-│   │   └── accidents/
-│   ├── archive/
-│   │   └── stations/
-│   │   ├── weather/
-│   │   └── accidents/
-│   └── quarantine/
-│
-├── notebooks/
-│   ├── 01_download_station.ipynb
-│   ├── 02_ingest_station.ipynb
-│   ├── 03_clean_station.ipynb
-│   ├── 04_download_weather.ipynb
-│   └── ghcn_meta/
-│
-├── sql/
-│   │   init.sql
-│
-├── docker-compose.yml
-├── requirements.txt
-├── .env
-└── README.md
+------------------------------------------------------------------------
+
+## 🗺 Geospatial Logic
+
+Each accident is mapped to its nearest weather station using:
+
+``` sql
+ORDER BY a.geom <-> geom
+LIMIT 1
 ```
 
----
+With a GiST spatial index:
 
-## Notebook Workflow
+``` sql
+CREATE INDEX idx_silver_stations_geom
+ON silver.stations USING GIST (geom);
+```
 
-1. **01_download_station.ipynb**
-   - Downloads and converts NOAA station metadata
+------------------------------------------------------------------------
 
-2. **02_ingest_station.ipynb**
-   - Loads station CSV into `bronze.stations` and archives the file
+## ⚡ Performance
 
-3. **03_clean_station.ipynb**
-   - Cleans and filters station data into `silver.stations`
+-   7.7M+ accident rows processed
+-   Parallel NOAA downloads
+-   Multi-threaded COPY ingestion
+-   Materialized weather pivot
+-   Spatial indexing
 
-4. **04_download_weather.ipynb**
-   - Downloads `.dly` daily weather files and converts to CSV
+------------------------------------------------------------------------
 
----
+## 🐳 Tech Stack
 
-## Database Layers
+-   Python 3.11
+-   PostgreSQL 16
+-   PostGIS
+-   SQLAlchemy
+-   Pandas
+-   Streamlit
+-   Docker Compose
 
-### Bronze: `bronze.stations`
-- Raw station metadata
-- Loose typing
-- Append-only
-- Includes ingestion metadata
+------------------------------------------------------------------------
 
-### Silver: `silver.stations`
-- Cleaned and typed station reference table
-- One row per station
-- Designed to join with weather and accident fact tables
-
----
-
-## Setup Instructions
+## 🚀 Running the Project
 
 ### 1️⃣ Clone the repository
-```bash
-git clone <repo-url>
-cd weather-accident-data-pipeline
+
+``` bash
+git clone https://github.com/DataTrainingFoundations/etl-pipeline
+cd weather-accident-etl
 ```
 
-### 2️⃣ Create `.env` file
-```env
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=postgres
+### 2️⃣ Start containers
+
+``` bash
+docker compose up --build
 ```
 
-### 3️⃣ Start services
-```bash
-docker compose up -d
-```
+### 3️⃣ Open Streamlit UI
 
-### 4️⃣ Open Jupyter
-```
-http://localhost:8888
-```
+    http://localhost:8501
 
-### 5️⃣ Run notebooks in order
-1. `01_download_station.ipynb`
-2. `02_ingest_station.ipynb`
-3. `03_clean_station.ipynb`
-4. `04_download_weather.ipynb`
+------------------------------------------------------------------------
 
----
+## 📥 Data Sources
 
-## What Is Not Implemented Yet
+### 🚗 US Accidents (Kaggle)
 
-- Weather data ingestion into PostgreSQL
-- Weather Bronze/Silver fact tables
-- Accident data ingestion
-- Weather–accident correlation logic
-- Gold / analytics layer
+Dataset:\
+https://www.kaggle.com/datasets/sobhanmoosavi/us-accidents
 
----
+You have **two options** for ingestion:
 
-## Status
+#### Option 1 --- Manual Download (Simple)
 
-🚧 **Active Development**
+1.  Download the dataset directly from Kaggle.
+2.  Extract the CSV.
+3.  Place the file into:
+    data/landing/accidents/
+
+------------------------------------------------------------------------
+
+#### Option 2 --- Automated Kaggle Download (Recommended)
+
+You can configure Kaggle API credentials for automated downloading.
+
+1.  Create a Kaggle API Key from your Kaggle account.
+
+2.  Place your `kaggle` credentials in:
+   .env
+
+3.  Replace the following in `.env` file:
+
+    KAGGLE_USERNAME=your_username
+    KAGGLE_KEY=your_key
+
+> 🔴 **Note:**\
+> The project currently defaults to a dummy/test Kaggle account
+> configured in the environment, so it should work out of the box.\
+> For production or personal use, you should replace these credentials
+> with your own.
+
+------------------------------------------------------------------------
+
+### 🌦 NOAA GHCN Daily Weather
+
+Weather data is downloaded automatically by the pipeline from:
+
+    https://www.ncei.noaa.gov/pub/data/ghcn/daily/all/
+
+The downloader: - Selects stations from `silver.stations` - Filters by
+selected states - Applies date range restrictions - Saves parsed daily
+files into:
+
+    data/landing/weather/
+
+
+------------------------------------------------------------------------
+
+## 🎯 Key Engineering Concepts
+
+-   Layered data modeling (Bronze/Silver/Gold)
+-   Idempotent pipeline design
+-   Conflict-safe upserts
+-   Materialized views
+-   Geospatial nearest-neighbor joins
+-   Parallel ingestion
+-   Containerized reproducibility
+
+------------------------------------------------------------------------
+
+Built as a portfolio data engineering project demonstrating scalable ETL
+architecture and geospatial analytics.
