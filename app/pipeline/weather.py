@@ -31,31 +31,52 @@ ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
 # ==================================
 # DOWNLOAD
 # ==================================
-def download(states: list[str], start_date=None, end_date=None, max_workers=12):
+def download(
+    states: list[str] | None = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    max_workers: int = 12,
+):
     """
-    Download NOAA .dly files for stations in selected states.
-    Writes filtered CSV files into landing directory.
+    Download NOAA .dly files.
+
+    Behavior:
+        states=None  → download ALL stations
+        states=[]    → skip download
+        states=[...] → filter by state list
     """
 
     engine = get_engine()
 
-    if not states:
-        return {"downloaded": 0}
-
     # -----------------------------
     # Fetch station_ids
     # -----------------------------
-    placeholders = ",".join([f":s{i}" for i in range(len(states))])
-    query = text(f"""
-        SELECT station_id
-        FROM silver.stations
-        WHERE state IN ({placeholders})
-    """)
-    params = {f"s{i}": s for i, s in enumerate(states)}
+    if states is None:
+        logger.info("Downloading weather for ALL stations")
+        station_ids = pd.read_sql(
+            text("SELECT station_id FROM silver.stations"),
+            engine,
+        )["station_id"].tolist()
 
-    station_ids = pd.read_sql(query, engine, params=params)["station_id"].tolist()
+    elif len(states) == 0:
+        logger.info("Empty state list provided — skipping weather download")
+        return {"downloaded": 0}
+
+    else:
+        logger.info(f"Downloading weather for states: {states}")
+
+        placeholders = ",".join([f":s{i}" for i in range(len(states))])
+        query = text(f"""
+            SELECT station_id
+            FROM silver.stations
+            WHERE state IN ({placeholders})
+        """)
+        params = {f"s{i}": s for i, s in enumerate(states)}
+
+        station_ids = pd.read_sql(query, engine, params=params)["station_id"].tolist()
 
     if not station_ids:
+        logger.warning("No station_ids found for weather download")
         return {"downloaded": 0}
 
     if start_date is None:
@@ -136,19 +157,16 @@ def download(states: list[str], start_date=None, end_date=None, max_workers=12):
 # INGEST → BRONZE
 # ==================================
 def ingest(files: list[Path] | None = None, max_workers: int = 4):
-    """
-    Multi-threaded COPY ingest into bronze.weather_daily.
-    """
 
     engine = get_engine()
 
-    # Ensure bronze table exists
     validate_table(engine, "bronze.weather_daily", not_empty=False)
 
     if files is None:
         files = list(LANDING_DIR.glob("*.csv"))
 
     if not files:
+        logger.info("No weather files found for ingest")
         return {"rows_inserted": 0}
 
     total_rows = 0
@@ -180,7 +198,6 @@ def ingest(files: list[Path] | None = None, max_workers: int = 4):
             finally:
                 raw_conn.close()
 
-            # Count rows (minus header)
             with open(file, "r") as f:
                 row_count = sum(1 for _ in f) - 1
 
@@ -197,17 +214,11 @@ def ingest(files: list[Path] | None = None, max_workers: int = 4):
         for future in as_completed(futures):
             total_rows += future.result()
 
-    # Post ingest validation
     validate_table(
         engine,
         "bronze.weather_daily",
         not_empty=True,
-        required_columns=[
-            "station_id",
-            "obs_date",
-            "element",
-            "value",
-        ],
+        required_columns=["station_id", "obs_date", "element", "value"],
     )
 
     logger.info(f"Inserted {total_rows:,} rows into bronze.weather_daily")
@@ -219,23 +230,14 @@ def ingest(files: list[Path] | None = None, max_workers: int = 4):
 # TRANSFORM → SILVER
 # ==================================
 def transform(truncate: bool = False) -> dict:
-    """
-    Transform bronze.weather_daily → silver.weather_daily.
-    """
 
     engine = get_engine()
 
-    # Pre-transform validation
     validate_table(
         engine,
         "bronze.weather_daily",
         not_empty=True,
-        required_columns=[
-            "station_id",
-            "obs_date",
-            "element",
-            "value",
-        ],
+        required_columns=["station_id", "obs_date", "element", "value"],
     )
 
     with engine.begin() as conn:
@@ -263,22 +265,16 @@ def transform(truncate: bool = False) -> dict:
 
         rows_written = result.rowcount
 
-    # Post-transform validation
     validate_table(
         engine,
         "silver.weather_daily",
         not_empty=True,
-        required_columns=[
-            "station_id",
-            "obs_date",
-            "element",
-            "value",
-        ],
+        required_columns=["station_id", "obs_date", "element", "value"],
     )
 
     logger.info(
-        f"Cleaned and transformed {rows_written:,} rows "
-        f"from bronze.weather_daily → silver.weather_daily"
+        f"Transformed {rows_written:,} rows "
+        f"bronze.weather_daily → silver.weather_daily"
     )
 
     return {"rows_written": rows_written}
@@ -287,7 +283,8 @@ def transform(truncate: bool = False) -> dict:
 # ==================================
 # RUN ALL
 # ==================================
-def run_all(states: list[str]):
+def run_all(states: list[str] | None = None):
+
     download_result = download(states)
     ingest_result = ingest()
     transform_result = transform()

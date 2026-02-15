@@ -95,3 +95,6 @@ KeyError: 'rows_written'
 2026-02-15 15:30:41 | INFO | pipeline.weather | Downloaded 1407 weather station files
 2026-02-15 15:31:03 | INFO | pipeline.weather | Inserted 443,973 rows into bronze.weather_daily
 2026-02-15 15:31:16 | INFO | pipeline.weather | Cleaned and transformed 443,973 rows from bronze.weather_daily → silver.weather_daily
+2026-02-15 15:43:52 | INFO | pipeline.stations | Stations download completed
+2026-02-15 15:44:07 | INFO | pipeline.stations | Inserted 129,657 rows into bronze.stations (truncate=False)
+2026-02-15 15:44:10 | INFO | pipeline.stations | Cleaned and transformed 75,846 rows from bronze.stations → silver.stations
