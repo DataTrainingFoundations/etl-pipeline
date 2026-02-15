@@ -98,3 +98,24 @@ KeyError: 'rows_written'
 2026-02-15 15:43:52 | INFO | pipeline.stations | Stations download completed
 2026-02-15 15:44:07 | INFO | pipeline.stations | Inserted 129,657 rows into bronze.stations (truncate=False)
 2026-02-15 15:44:10 | INFO | pipeline.stations | Cleaned and transformed 75,846 rows from bronze.stations → silver.stations
+2026-02-15 20:48:04 | INFO | pipeline.stations | Stations download completed
+2026-02-15 20:48:22 | INFO | pipeline.stations | Stations download completed
+2026-02-15 20:49:34 | INFO | pipeline.stations | Inserted 129,657 rows into bronze.stations (truncate=False)
+2026-02-15 20:50:57 | INFO | pipeline.stations | Cleaned and transformed 75,846 rows from bronze.stations → silver.stations
+2026-02-15 20:52:21 | INFO | pipeline.stations | Cleaned and transformed 75,846 rows from bronze.stations → silver.stations
+2026-02-15 20:55:18 | INFO | pipeline.weather | Downloading weather for states: ['GA']
+2026-02-15 20:55:42 | INFO | pipeline.weather | Downloaded 1407 weather station files
+2026-02-15 20:57:35 | INFO | pipeline.weather | Inserted 3,459,411 rows into bronze.weather_daily
+2026-02-15 21:00:24 | INFO | pipeline.weather | Downloading weather for states: ['GA']
+2026-02-15 21:00:58 | INFO | pipeline.weather | Downloaded 1407 weather station files
+2026-02-15 21:01:13 | INFO | pipeline.weather | Inserted 1,305,273 rows into bronze.weather_daily
+2026-02-15 21:02:12 | INFO | pipeline.weather | Transformed 1,305,273 rows bronze.weather_daily → silver.weather_daily
+2026-02-15 21:03:56 | INFO | pipeline.accidents | Downloading accidents dataset from Kaggle
+2026-02-15 21:05:21 | INFO | pipeline.accidents | Download complete
+2026-02-15 21:10:31 | INFO | pipeline.accidents | COPY ingest started: US_Accidents_March23.csv
+2026-02-15 21:11:55 | INFO | pipeline.accidents | Finished ingest US_Accidents_March23.csv (7,728,394 rows)
+2026-02-15 21:11:55 | INFO | pipeline.accidents | Inserted 7,728,394 rows into bronze.us_accidents in 83.41 seconds
+2026-02-15 21:12:57 | INFO | pipeline.accidents | Restricting to weather range: 2016-01-01 → 2018-12-31
+2026-02-15 21:12:58 | INFO | pipeline.accidents | Transformed 59,952 rows in 1.41 sec
+2026-02-15 21:13:44 | INFO | pipeline.accident_station_map | Building accident_station_map (nearest station mapping)
+2026-02-15 21:13:47 | INFO | pipeline.accident_station_map | Accident → Station map built: 59,952 rows in 2.92 seconds
