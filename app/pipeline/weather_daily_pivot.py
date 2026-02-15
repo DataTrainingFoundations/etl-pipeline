@@ -1,11 +1,16 @@
 # ==================================
 # Imports
 # ==================================
-import time
-from sqlalchemy import text
+from pipeline.stations import run_all as run_stations
+from pipeline.weather import run_all as run_weather
+from pipeline.accidents import run_all as run_accidents
 
-from components.db import get_engine
+from pipeline.accident_station_map import build as run_station_map
+from pipeline.weather_daily_pivot import build as run_weather_pivot
+from pipeline.accident_weather import build as run_gold
+
 from pipeline.validators import validate_table
+from components.db import get_engine
 from components.logger import get_logger
 
 
@@ -13,61 +18,110 @@ logger = get_logger(__name__)
 
 
 # ==================================
-# BUILD / REFRESH WEATHER PIVOT
+# RUN FULL PIPELINE
 # ==================================
-def build(concurrent: bool = False) -> dict:
+def run_full(states: list[str]) -> dict:
     """
-    Refresh silver.weather_daily_pivot materialized view.
+    Full DAG execution with validation.
 
-    Args:
-        concurrent: If True, uses CONCURRENTLY (requires unique index).
+    Execution Order:
 
-    Returns:
-        dict with row count and execution time.
+    1. Stations
+    2. Weather
+    3. Accidents
+    4. Weather Pivot
+    5. Accident → Station Map
+    6. Gold Build
     """
 
     engine = get_engine()
+
+    logger.info("Starting FULL pipeline execution")
+
+    # ==========================================================
+    # INGESTION LAYER
+    # ==========================================================
+
+    # -----------------------------
+    # Stations
+    # -----------------------------
+    logger.info("Running Stations")
+    run_stations()
+
+    validate_table(
+        engine,
+        "silver.stations",
+        not_empty=True,
+        required_columns=["station_id", "latitude", "longitude", "geom"],
+    )
+
+    # -----------------------------
+    # Weather
+    # -----------------------------
+    logger.info("Running Weather")
+    run_weather(states)
 
     validate_table(
         engine,
         "silver.weather_daily",
         not_empty=True,
-        required_columns=[
-            "station_id",
-            "obs_date",
-            "element",
-            "value",
-        ],
+        required_columns=["station_id", "obs_date", "element", "value"],
     )
 
-    start_time = time.perf_counter()
+    # -----------------------------
+    # Accidents
+    # -----------------------------
+    logger.info("Running Accidents")
+    run_accidents()
 
-    logger.info("Refreshing silver.weather_daily_pivot")
-
-    refresh_sql = (
-        "REFRESH MATERIALIZED VIEW CONCURRENTLY silver.weather_daily_pivot"
-        if concurrent
-        else
-        "REFRESH MATERIALIZED VIEW silver.weather_daily_pivot"
+    validate_table(
+        engine,
+        "silver.us_accidents",
+        not_empty=True,
+        required_columns=["accident_id", "start_time", "geom"],
     )
 
-    with engine.connect() as conn:
-        conn.execution_options(isolation_level="AUTOCOMMIT")
-        conn.execute(text(refresh_sql))
+    # ==========================================================
+    # TRANSFORMATION LAYER
+    # ==========================================================
 
-    elapsed = time.perf_counter() - start_time
+    # -----------------------------
+    # Weather Pivot
+    # -----------------------------
+    logger.info("Refreshing Weather Pivot")
+    run_weather_pivot()
 
-    with engine.connect() as conn:
-        count = conn.execute(
-            text("SELECT COUNT(*) FROM silver.weather_daily_pivot")
-        ).scalar()
-
-    logger.info(
-        f"Weather pivot refreshed: {count:,} rows "
-        f"in {elapsed:.2f} seconds"
+    validate_table(
+        engine,
+        "silver.weather_daily_pivot",
+        not_empty=True,
     )
 
-    return {
-        "rows_refreshed": count,
-        "seconds": round(elapsed, 2),
-    }
+    # -----------------------------
+    # Accident → Station Map
+    # -----------------------------
+    logger.info("Building Accident → Station Map")
+    run_station_map()
+
+    validate_table(
+        engine,
+        "silver.accident_station_map",
+        not_empty=True,
+    )
+
+    # ==========================================================
+    # GOLD LAYER
+    # ==========================================================
+
+    logger.info("Building Gold accident_weather")
+    run_gold()
+
+    validate_table(
+        engine,
+        "gold.accident_weather",
+        not_empty=True,
+    )
+
+    logger.info("FULL pipeline execution completed successfully")
+
+    return {"status": "success"}
