@@ -1,24 +1,14 @@
-# macOS
-.DS_Store
-**/.DS_Store
-
-# Jupyter
-.ipynb_checkpoints/
-**/.ipynb_checkpoints/
+# Docker / volumes
+data/
+!data/.gitkeep
 
 # Python
 __pycache__/
 *.pyc
-.venv/
 
-# Data (keep raw datasets out of git)
-data/landing/
-data/bronze/
-data/silver/
-data/gold/
-*.csv
-*.csv.gz
-*.parquet
 
-# Secrets
-.env
+# Env files | visible for now since its just on local
+# .env
+
+# OS
+.DS_Store

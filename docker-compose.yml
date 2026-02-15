@@ -1,60 +1,35 @@
 services:
   postgres:
-    image: postgres:16
-    container_name: etl-postgres
+    image: postgis/postgis:16-3.4
     env_file: .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
-      - ./:/work:ro
+      - ./sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 15
+      retries: 5
+    restart: unless-stopped
 
-  jupyter:
-    build:
-      context: ./docker/jupyter
-      dockerfile: Dockerfile
-    container_name: etl-jupyter
-    env_file: .env
+
+  streamlit:
+    build: .                # Uses Dockerfile
     ports:
-      - "8888:8888"
+      - "8501:8501"
+    env_file:
+      - .env
     volumes:
-      - ./:/home/jovyan/work
-    working_dir: /home/jovyan/work
-    command: >
-      start-notebook.sh
-      --ServerApp.password=''
-      --IdentityProvider.token=''
-      --ServerApp.ip=0.0.0.0
-      --ServerApp.port=8888
-      --ServerApp.open_browser=False
+      - ./app:/app          # 🔥 Live mount your app code
+      - ./data:/data        # 🔥 Mount landing/processed data
+      - ./logs:/app/logs    # logs
     depends_on:
       postgres:
         condition: service_healthy
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: etl-pgadmin
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "True"
-    volumes:
-      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   pgdata:
+
