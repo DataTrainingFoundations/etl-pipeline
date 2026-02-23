@@ -7,6 +7,10 @@ import time
 from pipeline.accidents import transform
 from components.table_explorer import render_table_explorer
 
+from sqlalchemy import text
+from components.db import get_engine
+import pandas as pd
+
 
 # ==================================
 # Page Config
@@ -24,21 +28,45 @@ st.divider()
 # ==================================
 st.subheader("🌎 Scope")
 
+engine = get_engine()
+
+states_df = pd.read_sql(
+    text("""
+        SELECT DISTINCT state
+        FROM silver.stations
+        WHERE state IS NOT NULL
+        ORDER BY state
+    """),
+    engine
+)
+
+if states_df.empty:
+    st.warning("No stations found. Please ingest and transform stations first.")
+    st.stop()
+
+all_states = states_df["state"].tolist()
+
+
 mode = st.radio(
     "Transform Scope",
-    ["Select States", "All States"],
-    index=0,
+    ["All States", "Select States"],
+    index=0,  # Default to All
     horizontal=True
 )
 
 if mode == "Select States":
     selected_states = st.multiselect(
         "Choose States",
-        options=["GA"],   # Replace with dynamic list later if desired
-        default=["GA"]
+        options=all_states,
+        default=[]
     )
+
+    if not selected_states:
+        st.warning("No states selected.")
+        selected_states = None
 else:
-    selected_states = None
+    selected_states = all_states
+
 
 st.divider()
 
