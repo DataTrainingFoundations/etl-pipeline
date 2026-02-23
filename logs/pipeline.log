@@ -119,3 +119,48 @@ KeyError: 'rows_written'
 2026-02-15 21:12:58 | INFO | pipeline.accidents | Transformed 59,952 rows in 1.41 sec
 2026-02-15 21:13:44 | INFO | pipeline.accident_station_map | Building accident_station_map (nearest station mapping)
 2026-02-15 21:13:47 | INFO | pipeline.accident_station_map | Accident → Station map built: 59,952 rows in 2.92 seconds
+2026-02-15 21:23:54 | INFO | pipeline.weather_daily_pivot | Refreshing weather_daily_pivot | concurrent=False
+2026-02-15 21:23:55 | INFO | pipeline.weather_daily_pivot | weather_daily_pivot refreshed successfully | rows=442883 | seconds=0.83
+2026-02-15 21:24:27 | INFO | pipeline.accident_weather | Building gold.accident_weather
+2026-02-15 21:24:28 | INFO | pipeline.accident_weather | Gold accident_weather built: 59,952 rows in 0.63 seconds
+2026-02-22 00:48:26 | INFO | pipeline.warehouse | Building dim_date
+2026-02-22 00:48:26 | INFO | pipeline.warehouse | Building dim_station
+2026-02-22 00:48:26 | INFO | pipeline.warehouse | Building dim_location
+2026-02-22 00:51:43 | INFO | pipeline.warehouse | Building dim_date
+2026-02-22 00:51:43 | INFO | pipeline.warehouse | Building dim_station
+2026-02-22 00:51:43 | INFO | pipeline.warehouse | Building dim_location
+2026-02-22 00:51:43 | INFO | pipeline.warehouse | Building fact_accident
+2026-02-22 00:51:43 | INFO | pipeline.warehouse | Building fact_weather_daily
+2026-02-22 00:51:43 | INFO | pipeline.warehouse | Building fact_accident_station_daily
+2026-02-22 00:51:43 | INFO | pipeline.warehouse | Warehouse build completed in 0.01 seconds
+2026-02-22 00:52:00 | INFO | pipeline.warehouse | Building dim_date
+2026-02-22 00:52:00 | INFO | pipeline.warehouse | Building dim_station
+2026-02-22 00:52:00 | INFO | pipeline.warehouse | Building dim_location
+2026-02-22 00:52:00 | INFO | pipeline.warehouse | Building fact_accident
+2026-02-22 00:52:00 | INFO | pipeline.warehouse | Building fact_weather_daily
+2026-02-22 00:52:00 | INFO | pipeline.warehouse | Building fact_accident_station_daily
+2026-02-22 00:52:00 | INFO | pipeline.warehouse | Warehouse build completed in 0.01 seconds
+2026-02-22 00:52:23 | INFO | pipeline.stations | Stations download completed
+2026-02-22 00:52:42 | INFO | pipeline.stations | Inserted 129,657 rows into bronze.stations (truncate=False)
+2026-02-22 00:52:47 | INFO | pipeline.stations | Cleaned and transformed 75,846 rows from bronze.stations → silver.stations
+2026-02-22 00:53:22 | INFO | pipeline.weather | Downloading weather for states: ['GA', 'FL']
+2026-02-22 00:54:58 | INFO | pipeline.weather | Downloaded 3651 weather station files
+2026-02-22 00:55:32 | INFO | pipeline.weather | Inserted 2,175,428 rows into bronze.weather_daily
+2026-02-22 00:56:02 | INFO | pipeline.weather | Transformed 2,175,428 rows bronze.weather_daily → silver.weather_daily
+2026-02-22 00:56:52 | INFO | pipeline.accidents | Downloading accidents dataset from Kaggle
+2026-02-22 00:58:13 | INFO | pipeline.accidents | Download complete
+2026-02-22 00:58:21 | INFO | pipeline.accidents | COPY ingest started: US_Accidents_March23.csv
+2026-02-22 00:59:47 | INFO | pipeline.accidents | Finished ingest US_Accidents_March23.csv (7,728,394 rows)
+2026-02-22 00:59:47 | INFO | pipeline.accidents | Inserted 7,728,394 rows into bronze.us_accidents in 85.30 seconds
+2026-02-22 01:01:00 | INFO | pipeline.accidents | Restricting to weather range: 2016-01-01 → 2017-12-31
+2026-02-22 01:01:13 | INFO | pipeline.accidents | Transformed 1,128,914 rows in 13.13 sec
+2026-02-22 01:02:58 | INFO | pipeline.accidents | Transformed 6,599,480 rows in 96.64 sec
+2026-02-22 01:03:13 | INFO | pipeline.accident_station_map | Building accident_station_map (nearest station mapping)
+2026-02-22 01:10:36 | INFO | pipeline.accident_station_map | Accident → Station map built: 7,728,394 rows in 442.79 seconds
+2026-02-22 01:11:11 | INFO | pipeline.warehouse | Building dim_date
+2026-02-22 01:11:12 | INFO | pipeline.warehouse | Building dim_station
+2026-02-22 01:11:12 | INFO | pipeline.warehouse | Building dim_location
+2026-02-22 01:11:20 | INFO | pipeline.warehouse | Building fact_accident
+2026-02-22 01:14:15 | INFO | pipeline.warehouse | Building fact_weather_daily
+2026-02-22 01:14:23 | INFO | pipeline.warehouse | Building fact_accident_station_daily
+2026-02-22 01:15:07 | INFO | pipeline.warehouse | Warehouse build completed in 236.65 seconds

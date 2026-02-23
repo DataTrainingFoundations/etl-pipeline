@@ -209,8 +209,6 @@ def transform(truncate: bool = False) -> dict:
                 latitude,
                 longitude,
                 elevation_m,
-                is_gsn,
-                is_hcn,
                 geom
             )
             SELECT
@@ -221,8 +219,6 @@ def transform(truncate: bool = False) -> dict:
                 TRIM(latitude)::DOUBLE PRECISION,
                 TRIM(longitude)::DOUBLE PRECISION,
                 NULLIF(TRIM(elevation), '')::DOUBLE PRECISION,
-                (TRIM(gsn) = 'GSN'),
-                (TRIM(hcn) = 'HCN'),
                 ST_SetSRID(
                     ST_MakePoint(
                         TRIM(longitude)::DOUBLE PRECISION,

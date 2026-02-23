@@ -6,8 +6,6 @@ CREATE TABLE IF NOT EXISTS silver.stations (
     latitude         DOUBLE PRECISION NOT NULL,
     longitude        DOUBLE PRECISION NOT NULL,
     elevation_m      DOUBLE PRECISION,
-    is_gsn           BOOLEAN,
-    is_hcn           BOOLEAN,
     geom             GEOGRAPHY(Point, 4326),
     created_at       TIMESTAMPTZ DEFAULT now(),
     last_updated_at  TIMESTAMPTZ DEFAULT now()

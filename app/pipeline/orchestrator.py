@@ -5,9 +5,8 @@ from pipeline.stations import run_all as run_stations
 from pipeline.weather import run_all as run_weather
 from pipeline.accidents import run_all as run_accidents
 
-from pipeline.weather_daily_pivot import build as build_weather_pivot
 from pipeline.accident_station_map import build as build_station_map
-from pipeline.accident_weather import build as build_gold
+from pipeline.gold.warehouse import run_all as run_warehouse
 
 from pipeline.validators import validate_table
 from components.db import get_engine
@@ -28,9 +27,8 @@ def run_full(states: list[str] | None = None) -> dict:
         1. Stations
         2. Weather
         3. Accidents
-        4. Weather Daily Pivot
-        5. Accident → Station Map
-        6. Gold (Accident Weather)
+        4. Accident → Station Map
+        5. Gold Star Schema Build
 
     Args:
         states: Optional list of state codes to filter weather ingestion.
@@ -45,7 +43,7 @@ def run_full(states: list[str] | None = None) -> dict:
     logger.info("Starting FULL pipeline execution")
 
     # ==========================================================
-    # INGEST LAYER
+    # SILVER LAYER
     # ==========================================================
 
     # -----------------------------
@@ -95,18 +93,6 @@ def run_full(states: list[str] | None = None) -> dict:
     # ==========================================================
 
     # -----------------------------
-    # Weather Daily Pivot
-    # -----------------------------
-    logger.info("Refreshing weather_daily_pivot")
-    build_weather_pivot()
-
-    validate_table(
-        engine,
-        "silver.weather_daily_pivot",
-        not_empty=True,
-    )
-
-    # -----------------------------
     # Accident → Station Map
     # -----------------------------
     logger.info("Building accident_station_map")
@@ -119,17 +105,16 @@ def run_full(states: list[str] | None = None) -> dict:
     )
 
     # ==========================================================
-    # GOLD LAYER
+    # GOLD LAYER (STAR SCHEMA)
     # ==========================================================
 
-    logger.info("Building gold.accident_weather")
-    build_gold()
+    logger.info("Building Gold Star Schema")
+    run_warehouse()
 
-    validate_table(
-        engine,
-        "gold.accident_weather",
-        not_empty=True,
-    )
+    # Validate key fact tables exist and are populated
+    validate_table(engine, "gold.fact_accident", not_empty=True)
+    validate_table(engine, "gold.fact_weather_daily", not_empty=True)
+    validate_table(engine, "gold.dim_date", not_empty=True)
 
     logger.info("FULL pipeline execution completed successfully")
 

@@ -4,3 +4,5 @@ sqlalchemy
 pandas
 geopandas
 kaggle
+pydeck
+plotly

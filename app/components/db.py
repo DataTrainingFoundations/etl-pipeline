@@ -64,16 +64,36 @@ This allows:
 - No full database reset required
 - Single source of truth for schema definitions
 """
+
 OBJECT_SQL_MAP = {
+    # ===============================
+    # BRONZE
+    # ===============================
     "bronze.weather_daily": "10_weather_daily.sql",
     "bronze.stations": "11_bronze_stations.sql",
     "bronze.us_accidents": "12_bronze_us_accidents.sql",
+
+    # ===============================
+    # SILVER
+    # ===============================
     "silver.us_accidents": "20_us_accidents.sql",
     "silver.stations": "21_silver_stations.sql",
     "silver.weather_daily": "22_silver_weather_daily.sql",
     "silver.accident_station_map": "23_silver_accident_station_map.sql",
-    "silver.weather_daily_pivot": "24_silver_weather_daily_pivot.sql",
-    "gold.accident_weather": "30_gold_accident_weather.sql",
+
+    # ===============================
+    # GOLD - DIMENSIONS
+    # ===============================
+    "gold.dim_date": "30_gold_dim_date.sql",
+    "gold.dim_station": "31_gold_dim_station.sql",
+    "gold.dim_location": "32_gold_dim_location.sql",
+
+    # ===============================
+    # GOLD - FACTS
+    # ===============================
+    "gold.fact_accident": "33_gold_fact_accident.sql",
+    "gold.fact_weather_daily": "34_gold_fact_weather_daily.sql",
+    "gold.fact_accident_station_daily": "35_gold_fact_accident_station_daily.sql",
 }
 
 
