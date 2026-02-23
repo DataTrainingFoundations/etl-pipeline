@@ -6,3 +6,4 @@ geopandas
 kaggle
 pydeck
 plotly
+seaborn

@@ -164,3 +164,28 @@ KeyError: 'rows_written'
 2026-02-22 01:14:15 | INFO | pipeline.warehouse | Building fact_weather_daily
 2026-02-22 01:14:23 | INFO | pipeline.warehouse | Building fact_accident_station_daily
 2026-02-22 01:15:07 | INFO | pipeline.warehouse | Warehouse build completed in 236.65 seconds
+2026-02-23 14:48:08 | INFO | pipeline.stations | Stations download completed
+2026-02-23 14:48:41 | INFO | pipeline.stations | Inserted 129,657 rows into bronze.stations (truncate=False)
+2026-02-23 14:48:54 | INFO | pipeline.stations | Cleaned and transformed 75,846 rows from bronze.stations → silver.stations
+2026-02-23 14:49:18 | INFO | pipeline.weather | Downloading weather for states: ['GA']
+2026-02-23 14:50:28 | INFO | pipeline.weather | Downloaded 1407 weather station files
+2026-02-23 14:51:12 | INFO | pipeline.weather | Inserted 3,459,386 rows into bronze.weather_daily
+2026-02-23 14:51:31 | INFO | pipeline.weather | Truncating silver.weather_daily
+2026-02-23 14:52:54 | INFO | pipeline.weather | Transformed 3,459,386 rows bronze.weather_daily → silver.weather_daily
+2026-02-23 14:52:59 | INFO | pipeline.accidents | Downloading accidents dataset from Kaggle
+2026-02-23 14:56:43 | INFO | pipeline.accidents | Download complete
+2026-02-23 14:59:14 | INFO | pipeline.accidents | COPY ingest started: US_Accidents_March23.csv
+2026-02-23 15:09:17 | INFO | pipeline.accidents | Finished ingest US_Accidents_March23.csv (7,728,394 rows)
+2026-02-23 15:09:17 | INFO | pipeline.accidents | Inserted 7,728,394 rows into bronze.us_accidents in 602.36 seconds
+2026-02-23 15:12:25 | INFO | pipeline.accidents | Restricting to weather range: 2016-01-01 → 2023-12-31
+2026-02-23 15:13:24 | INFO | pipeline.accidents | Transformed 169,234 rows in 59.26 sec
+2026-02-23 15:14:44 | INFO | pipeline.accident_station_map | Truncating silver.accident_station_map
+2026-02-23 15:14:44 | INFO | pipeline.accident_station_map | Building accident_station_map (nearest station mapping)
+2026-02-23 15:15:04 | INFO | pipeline.accident_station_map | Accident → Station map built: 169,234 rows in 20.20 seconds
+2026-02-23 15:17:28 | INFO | pipeline.warehouse | Building dim_date
+2026-02-23 15:17:29 | INFO | pipeline.warehouse | Building dim_station
+2026-02-23 15:17:29 | INFO | pipeline.warehouse | Building dim_location
+2026-02-23 15:17:31 | INFO | pipeline.warehouse | Building fact_accident
+2026-02-23 15:17:38 | INFO | pipeline.warehouse | Building fact_weather_daily
+2026-02-23 15:18:19 | INFO | pipeline.warehouse | Building fact_accident_station_daily
+2026-02-23 15:18:21 | INFO | pipeline.warehouse | Warehouse build completed in 53.52 seconds
